@@ -1,2 +1,2 @@
 test:
-	echo "this is a test run for make"
+	@echo "this is a test run for make"
