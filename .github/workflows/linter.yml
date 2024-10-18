@@ -13,3 +13,5 @@ jobs:
               uses: golangci/golangci-lint-action@v3
               with: 
                 version: v1.54.2
+                args: |
+                    $(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.go$')
