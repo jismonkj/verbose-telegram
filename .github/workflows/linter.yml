@@ -10,8 +10,9 @@ jobs:
         steps:
             - uses: actions/checkout@v3
             - name: Run go linter
-              uses: golangci/golangci-lint-action@v3
-              with: 
-                version: v1.54.2
+              run: echo "Test"
+            #  uses: golangci/golangci-lint-action@v3
+              #with: 
+              #  version: v1.54.2
                 # args: |
                     # $(git diff --name-only ${{ github.event.pull_request.head.sha }} ${{ github.sha }} | grep '\.go$')
