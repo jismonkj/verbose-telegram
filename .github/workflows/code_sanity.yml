@@ -25,7 +25,9 @@ jobs:
               run: |
                 echo "Current branch: ${{ github.head_ref }}"
                 echo "Target branch: ${{ github.base_ref }}"
-        
+            - name: Print GITHUB_REF_NAME
+              run: |
+                echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
             - name: Print Changed Files
               run: |
                 git diff --name-only origin/$GITHUB_REF_NAME
