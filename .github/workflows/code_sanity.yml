@@ -17,4 +17,4 @@ jobs:
         steps:
             - uses: actions/checkout@v3
             - name: Run coverage
-              run: make code-coverage; make print-total-coverage;
+              run: make sanity;
