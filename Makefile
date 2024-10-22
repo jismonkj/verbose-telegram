@@ -12,10 +12,14 @@ prep-coverage:
 
 # Target to get changed Go files
 changed-files: prep-coverage
-	@git diff --name-only $(git merge-base origin/main HEAD) HEAD | grep '.go$$' > ./coverage/changed_files.txt
+    echo "Current branch: $$CURRENT_BRANCH"; \
+	git diff --name-only $(git merge-base $$CURRENT_BRANCH HEAD) HEAD | grep '.go$$' > ./coverage/changed_files.txt
+	@echo "<--- changed files -->"
+	@cat ./coverage/changed_files.txt
+	@echo "<-------------------->\n"
 
 # Target to find unique packages
-unique-packages: changed-files
+unique-packages:
 	@awk -F"/" '{OFS="/"; $$(NF)=""; print}' ./coverage/changed_files.txt | sort | uniq > ./coverage/packages.txt
 
 # Target to run tests for the unique packages
@@ -33,6 +37,7 @@ merge-coverage:
 
 # Target to summarize and print total coverage
 summarize-coverage: merge-coverage
+	@echo "\nTotal code coverage: "
 	@go tool cover -func ./coverage/merged.cov | grep total | grep -Eo '[0-9]+\.[0-9]+'
 
 # Phony target to run everything

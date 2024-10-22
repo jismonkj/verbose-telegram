@@ -14,7 +14,16 @@ jobs:
     #                 # $(git diff --name-only ${{ github.event.pull_request.head.sha }} ${{ github.sha }} | grep '\.go$')
     coverage:
         runs-on: ubuntu-latest
+        env:
+            CURRENT_BRANCH: ${{ github.head_ref }}
+            TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
         steps:
             - uses: actions/checkout@v3
+              with:
+                fetch-depth: 0  # Ensure the entire history is fetched
+            - name: Create directories
+              run: make prep-coverage
+            - name: Get changes
+              run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.after }} | grep '.go' > ./coverage/changed_files.txt
             - name: Run coverage
-              run: make sanity;
+              run: make sanity
