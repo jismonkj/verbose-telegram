@@ -21,16 +21,9 @@ jobs:
             - uses: actions/checkout@v3
               with:
                 fetch-depth: 0  # Ensure the entire history is fetched
-            # - name: Debug Branch Names
-            #   run: |
-            #     echo "Current branch: ${{ github.head_ref }}"
-            #     echo "Target branch: ${{ github.base_ref }}"
-            # - name: Print GITHUB_REF_NAME
-            #   run: |
-            #     echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
-            # with:
-            #     fetch-depth: 0
+            - name: Create directories
+              run: make prep-coverage
             - name: Get changes
-              run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.after }}
-            # - name: Run coverage
-            #   run: make sanity;
+              run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.after }} | grep '.go$$' > ./coverage/changed_files.txt
+            - name: Run coverage
+              run: make sanity;

@@ -43,6 +43,6 @@ summarize-coverage: merge-coverage
 	@go tool cover -func ./coverage/merged.cov | grep total | grep -Eo '[0-9]+\.[0-9]+'
 
 # Phony target to run everything
-sanity: changed-files
+sanity: code-coverage summarize-coverage
 
 .PHONY: sanity changed-files unique-packages code-coverage summarize-coverage
