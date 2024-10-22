@@ -1,0 +1,6 @@
+mode: set
+github.com/jismonkj/verbose-telegram/main.go:8.13,11.2 2 0
+github.com/jismonkj/verbose-telegram/services/notifications/notify.go:5.15,7.2 1 0
+github.com/jismonkj/verbose-telegram/main.go:8.13,11.2 2 0
+github.com/jismonkj/verbose-telegram/services/helper/helper.go:5.15,7.2 1 1
+github.com/jismonkj/verbose-telegram/services/notifications/notify.go:5.15,7.2 1 0

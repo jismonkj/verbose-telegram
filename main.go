@@ -1,5 +1,11 @@
 package main
 
+import (
+	"github.com/jismonkj/verbose-telegram/services/helper"
+	"github.com/jismonkj/verbose-telegram/services/notifications"
+)
+
 func main() {
-	ImHere()
+	helper.Helper()
+	notifications.Notify()
 }
