@@ -22,5 +22,8 @@ jobs:
             - name: Set up Git
               run: |
                 git fetch origin +refs/pull/${{ github.event.pull_request.number }}/merge
+            - name: Print changed files
+              run: |
+                git diff --name-only origin/main...HEAD
             - name: Run coverage
               run: make sanity;
