@@ -3,6 +3,8 @@
 prep-coverage:
 	@mkdir -p ./coverage
 	@mkdir -p ./coverage/profiles
+	git merge-base $$CURRENT_BRANCH HEAD
+	git diff --name-only $(git merge-base $$CURRENT_BRANCH HEAD) HEAD
 # code-coverage:
 # 	@go test -v -coverpkg=./... -covermode=set -coverprofile=./coverage/unit.cov ./...
 # 	@cat ./coverage/unit.cov
@@ -12,15 +14,14 @@ prep-coverage:
 
 # Target to get changed Go files
 changed-files: prep-coverage
-	@current_branch=$$(git rev-parse --abbrev-ref HEAD); \
-    echo "Current branch: $$current_branch"; \
-	git diff --name-only $(git merge-base $$current_branch HEAD) HEAD | grep '.go$$' > ./coverage/changed_files.txt
+    echo "Current branch: $$CURRENT_BRANCH"; \
+	git diff --name-only $(git merge-base $$CURRENT_BRANCH HEAD) HEAD | grep '.go$$' > ./coverage/changed_files.txt
 	@echo "<--- changed files -->"
 	@cat ./coverage/changed_files.txt
 	@echo "<-------------------->\n"
 
 # Target to find unique packages
-unique-packages: changed-files
+unique-packages:
 	@awk -F"/" '{OFS="/"; $$(NF)=""; print}' ./coverage/changed_files.txt | sort | uniq > ./coverage/packages.txt
 
 # Target to run tests for the unique packages
@@ -42,6 +43,6 @@ summarize-coverage: merge-coverage
 	@go tool cover -func ./coverage/merged.cov | grep total | grep -Eo '[0-9]+\.[0-9]+'
 
 # Phony target to run everything
-sanity: code-coverage summarize-coverage
+sanity: changed-files
 
 .PHONY: sanity changed-files unique-packages code-coverage summarize-coverage

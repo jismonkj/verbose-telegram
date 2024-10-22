@@ -14,6 +14,9 @@ jobs:
     #                 # $(git diff --name-only ${{ github.event.pull_request.head.sha }} ${{ github.sha }} | grep '\.go$')
     coverage:
         runs-on: ubuntu-latest
+        env:
+            CURRENT_BRANCH: ${{ github.head_ref }}
+            TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
         steps:
             - uses: actions/checkout@v3
             - name: Run coverage
