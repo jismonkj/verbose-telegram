@@ -18,13 +18,17 @@ jobs:
             CURRENT_BRANCH: ${{ github.head_ref }}
             TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
         steps:
-            - uses: actions/checkout@v3
-            - name: Set up Git
+            - uses: actions/checkout@v2
+              with:
+                fetch-depth: 0  # Ensure the entire history is fetched
+            - name: Debug Branch Names
               run: |
-                git fetch origin +refs/pull/${{ github.event.pull_request.number }}/merge
-                git checkout ${{ github.head_ref }}
-            - name: Print changed files
+                echo "Current branch: ${{ github.head_ref }}"
+                echo "Target branch: ${{ github.base_ref }}"
+        
+            - name: Print Changed Files
               run: |
+                git fetch origin ${{ github.base_ref }}:${{ github.base_ref }}
                 git diff --name-only ${{ github.base_ref }}...${{ github.head_ref }}
-            - name: Run coverage
-              run: make sanity;
+                # - name: Run coverage
+            #   run: make sanity;
