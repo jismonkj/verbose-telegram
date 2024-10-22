@@ -24,6 +24,8 @@ jobs:
             - name: Create directories
               run: make prep-coverage
             - name: Get changes
-              run: echo ${{github.event.pull_request.changed_files}} | grep '.go' > ./coverage/changed_files.txt
+              run: | 
+                git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.ref }} | grep '.go' > ./coverage/changed_files.txt
+                cat ./coverage/changed_files.txt
             - name: Run coverage
               run: make sanity
