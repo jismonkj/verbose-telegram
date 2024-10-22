@@ -3,10 +3,6 @@
 prep-coverage:
 	@mkdir -p ./coverage
 	@mkdir -p ./coverage/profiles
-	git branch
-	git diff --name-only
-	git merge-base origin/main HEAD
-	git diff --name-only $(git merge-base origin/main HEAD) HEAD
 # code-coverage:
 # 	@go test -v -coverpkg=./... -covermode=set -coverprofile=./coverage/unit.cov ./...
 # 	@cat ./coverage/unit.cov
@@ -16,7 +12,9 @@ prep-coverage:
 
 # Target to get changed Go files
 changed-files: prep-coverage
-	@git diff --name-only $(git merge-base origin/main HEAD) HEAD | grep '.go$$' > ./coverage/changed_files.txt
+	@current_branch=$$(git rev-parse --abbrev-ref HEAD); \
+    echo "Current branch: $$current_branch"; \
+	git diff --name-only $(git merge-base $$current_branch HEAD) HEAD | grep '.go$$' > ./coverage/changed_files.txt
 	@echo "<--- changed files -->"
 	@cat ./coverage/changed_files.txt
 	@echo "<-------------------->\n"
