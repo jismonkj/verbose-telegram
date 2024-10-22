@@ -19,5 +19,8 @@ jobs:
             TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
         steps:
             - uses: actions/checkout@v3
+            - name: Set up Git
+              run: |
+                git fetch origin +refs/pull/${{ github.event.pull_request.number }}/merge
             - name: Run coverage
               run: make sanity;
