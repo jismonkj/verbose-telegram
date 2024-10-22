@@ -3,6 +3,10 @@
 prep-coverage:
 	@mkdir -p ./coverage
 	@mkdir -p ./coverage/profiles
+	git branch
+	git diff --name-only
+	git merge-base origin/main HEAD
+	git diff --name-only $(git merge-base origin/main HEAD) HEAD
 # code-coverage:
 # 	@go test -v -coverpkg=./... -covermode=set -coverprofile=./coverage/unit.cov ./...
 # 	@cat ./coverage/unit.cov
