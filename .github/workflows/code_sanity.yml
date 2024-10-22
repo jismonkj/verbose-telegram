@@ -1,0 +1,20 @@
+name: Code Sanity
+on:
+    pull_request
+jobs:
+    # linter:
+    #     runs-on: ubuntu-latest
+    #     steps:
+    #         - uses: actions/checkout@v3
+    #         - name: Run go linter
+    #           uses: golangci/golangci-lint-action@v3
+    #           with: 
+    #             version: v1.54.2
+    #             # args: |
+    #                 # $(git diff --name-only ${{ github.event.pull_request.head.sha }} ${{ github.sha }} | grep '\.go$')
+    coverage:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: action/checkout@v3
+            - name: Run coverage
+              uses: go test -v -coverpkg=./... -covermode=set -coverprofile=./coverage/unit.cov ./...
