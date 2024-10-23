@@ -27,6 +27,6 @@ jobs:
                 ls
             - name: Get changes
               run: | 
-                git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '.go'
+                git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | (grep '.go' > ./coverage/changed_files.txt) || echo "No Go files changed"
             - name: Run coverage
               run: make sanity
