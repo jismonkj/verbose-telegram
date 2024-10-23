@@ -22,29 +22,16 @@ jobs:
         #   uses: xSAVIKx/artifact-exists-action@v0
         #   with:
         #     name: coverage-profiles
-        - name: Get Workflow ID
-          id: get-workflow-id
-          run: |
-            CURRENT_RUN_ID=${{ github.run_id }}
-            WORKFLOW_NAME=$(echo "${{ github.workflow }}" | jq -sRr @uri)
-            RESPONSE=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                            -H "Accept: application/vnd.github.v3+json" \
-                            "https://api.github.com/repos/${{ github.repository }}/actions/runs?status=success&workflow=${WORKFLOW_NAME}")
-            echo "API Response: $RESPONSE"
-            PREVIOUS_SUCCESSFUL_RUN_ID=$(echo $RESPONSE | jq --argjson CURRENT_RUN_ID "$CURRENT_RUN_ID" '[.workflow_runs[] | select(.id != $CURRENT_RUN_ID)] | sort_by(.run_started_at) | reverse | .[0].id')
-            echo "Previous successful run ID is $PREVIOUS_SUCCESSFUL_RUN_ID"
-            echo "previous_run_id=$PREVIOUS_SUCCESSFUL_RUN_ID" >> $GITHUB_OUTPUT
-
         - name: Get Previous Successful Run ID
           id: get-run-id
           run: |
-            WORKFLOW_ID=${{ steps.get-workflow-id.outputs.workflow_id }}
             CURRENT_RUN_ID=${{ github.run_id }}
-
-            PREVIOUS_SUCCESSFUL_RUN_ID=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            RESPONSE=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                                         -H "Accept: application/vnd.github.v3+json" \
-                                        "https://api.github.com/repos/${{ github.repository }}/actions/runs?workflow_id=$WORKFLOW_ID&status=success" \
-                                        | jq --argjson CURRENT_RUN_ID "$CURRENT_RUN_ID" '[.workflow_runs[] | select(.id != $CURRENT_RUN_ID)] | sort_by(.run_started_at) | reverse | .[0].id')
+                                        "https://api.github.com/repos/${{ github.repository }}/actions/runs?workflow_id=${{ github.workflow }}&status=success")
+            echo "API Response: $RESPONSE"
+            PREVIOUS_SUCCESSFUL_RUN_ID=$(echo $RESPONSE | jq --arg CURRENT_RUN_ID "$CURRENT_RUN_ID" '[.workflow_runs[] | select(.id != ($CURRENT_RUN_ID | tonumber))] | sort_by(.run_started_at) | reverse | .[0].id')
+
             echo "Previous successful run ID is $PREVIOUS_SUCCESSFUL_RUN_ID"
             echo "previous_run_id=$PREVIOUS_SUCCESSFUL_RUN_ID" >> $GITHUB_OUTPUT
         - name: Download directory artifact
