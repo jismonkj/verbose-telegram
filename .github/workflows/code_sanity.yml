@@ -31,18 +31,13 @@ jobs:
                                         "https://api.github.com/repos/${{ github.repository }}/actions/runs?status=success")
 
             echo "API Response: $RESPONSE"
-            WORKFLOW_RUNS=$(echo $RESPONSE | jq '.workflow_runs[]')
-            echo "Workflow Runs: $WORKFLOW_RUNS"
-            FILTERED_BY_ID=$(echo $WORKFLOW_RUNS | jq --arg CURRENT_RUN_ID $CURRENT_RUN_ID 'select(.id != ($CURRENT_RUN_ID | tonumber))')
-            echo "Filtered: $FILTERED_BY_ID"
-            FILT_WORKFLOW=$(echo $FILTERED_BY_ID | jq --arg workflow "${{github.workflow}}" 'select(.name == $workflow)')
-            echo "Filtered workflow: $FILT_WORKFLOW"
-            SORTED=$(echo $FILT_WORKFLOW | jq 'sort_by(.run_started_at)')
-            echo "Sorted: $SORTED"
-            REVERSED=$(echo $SORTED | jq 'reverse')
-            echo "LATEST: $LATEST"
-            LATEST=$(echo $REVERSED | jq '.[0]')
-            PREVIOUS_SUCCESSFUL_RUN_ID=$(echo $LATEST | jq '.id')
+
+            PREVIOUS_SUCCESSFUL_RUN_ID=$(echo $RESPONSE | jq --arg name "${{github.workflow}}" --argjson exclude_id $CURRENT_RUN_ID '
+                                                              .workflow_runs
+                                                              | map(select(.name == $name and .id != $exclude_id))
+                                                              | max_by(.run_started_at)
+                                                              | .id' 
+                                                            )
 
             echo "Previous successful run ID is $PREVIOUS_SUCCESSFUL_RUN_ID"
             echo "previous_run_id=$PREVIOUS_SUCCESSFUL_RUN_ID" >> $GITHUB_OUTPUT
