@@ -33,9 +33,10 @@ jobs:
             echo "API Response: $RESPONSE"
             WORKFLOW_RUNS=$(echo $RESPONSE | jq '.workflow_runs[]')
             echo "Workflow Runs: $WORKFLOW_RUNS"
-            FILTERED_BY_ID=$(echo $WORKFLOW_RUNS | jq 'select(.id != ($CURRENT_RUN_ID | tonumber))')
-            echo "Filtered $FILTERED_BY_ID"
+            FILTERED_BY_ID=$(echo $WORKFLOW_RUNS | jq --arg CURRENT_RUN_ID $CURRENT_RUN_ID 'select(.id != ($CURRENT_RUN_ID | tonumber))')
+            echo "Filtered: $FILTERED_BY_ID"
             FILT_WORKFLOW=$(echo $FILTERED_BY_ID | jq --arg workflow "${{github.workflow}}" 'select(.name == $workflow)')
+            echo "Filtered workflow: $FILT_WORKFLOW"
             PREVIOUS_SUCCESSFUL_RUN_ID=$(ECHO $FILT_WORKFLOW | jq 'sort_by(.run_started_at) | reverse | .[0].id')
 
             echo "Previous successful run ID is $PREVIOUS_SUCCESSFUL_RUN_ID"
