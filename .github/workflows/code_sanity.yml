@@ -21,7 +21,7 @@ jobs:
           id: check-artifact
           uses: xSAVIKx/artifact-exists-action@v0
           with:
-            name: my-directory-artifact
+            name: coverage-profiles
         - name: Download directory artifact
         # if: steps.check-artifact.outputs.exists == 'true'
           uses: actions/download-artifact@v4
