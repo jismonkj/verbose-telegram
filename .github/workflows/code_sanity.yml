@@ -25,7 +25,6 @@ jobs:
         - name: Get Workflow ID
           id: get-workflow-id
           run: |
-            |
             CURRENT_RUN_ID=${{ github.run_id }}
             WORKFLOW_NAME=$(echo "${{ github.workflow }}" | jq -sRr @uri)
             RESPONSE=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
