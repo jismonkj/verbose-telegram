@@ -40,13 +40,13 @@ jobs:
         - name: Print directory contents
           run: ls -lah ./unit-tests
         - name: Run coverage for changes
-          if: steps.check-artifact.outputs.coverage_profile_exists == 'true'
+          if: steps.check-artifact.outputs.exists == 'true'
           run: | 
             git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | (grep '.go' > ./coverage/changed_files.txt) || echo "No Go files changed"
             make code-coverage-on-changes
             make summarize-coverage
         - name: Run coverage for all
-          if: steps.check-artifact.outputs.coverage_profile_exists == 'false'
+          if: steps.check-artifact.outputs.exists == 'false'
           run: |
             make code-coverage
             make summarize-coverage
