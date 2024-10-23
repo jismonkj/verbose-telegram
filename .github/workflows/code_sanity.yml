@@ -2,31 +2,60 @@ name: Code Sanity
 on:
     pull_request
 jobs:
-    # linter:
-    #     runs-on: ubuntu-latest
-    #     steps:
-    #         - uses: actions/checkout@v3
-    #         - name: Run go linter
-    #           uses: golangci/golangci-lint-action@v3
-    #           with: 
-    #             version: v1.54.2
-    #             # args: |
-    #                 # $(git diff --name-only ${{ github.event.pull_request.head.sha }} ${{ github.sha }} | grep '\.go$')
-    coverage:
+    download-coverage-profiles:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - name: Create directories
+          run: |
+            make prep-coverage;
+        - name: Check for directory artifact
+          id: check-artifact
+          run: |
+            if curl -sSfI "https://github.com/OWNER/REPO/actions/artifacts" | grep -q "coverage-profiles"; then
+              echo "::set-output name=coverage_profile_exists::true"
+            else
+              echo "::set-output name=coverage_profile_exists::false"
+            fi
+        - name: Download directory artifact
+          if: steps.check-artifact.outputs.coverage_profile_exists == 'true'
+          uses: actions/download-artifact@v2
+          with:
+            name: coverage-profiles
+            path: ./coverages
+
+        - name: Print directory contents
+          run: ls -lah ./coverages
+          
+    coverage-on-changes:
         runs-on: ubuntu-latest
-        env:
-            CURRENT_BRANCH: ${{ github.head_ref }}
-            TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+        needs: download-coverage-profiles
         steps:
             - uses: actions/checkout@v3
               with:
                 fetch-depth: 0  # Ensure the entire history is fetched
-            - name: Create directories
-              run: |
-                make prep-coverage;
-                ls
-            - name: Get changes
+            # - name: Create directories // check above
+            #   run: |
+            #     make prep-coverage;
+            - name: Run coverage for changes
+              if: needs.download-coverage-profiles.outputs.coverage_profile_exists == 'true'
               run: | 
                 git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | (grep '.go' > ./coverage/changed_files.txt) || echo "No Go files changed"
-            - name: Run coverage
-              run: make sanity
+                make code-coverage-on-changes
+                make summarize-coverage
+            - name: Run coverage for all
+              if: needs.download-coverage-profiles.outputs.coverage_profile_exists == 'false'
+              run: |
+                make code-coverage
+                make summarize-coverage
+    upload-coverage:
+        runs-on: ubuntu-latest
+        needs: [coverage-on-changes]
+        steps:
+          - name: Upload artifact
+            uses: actions/upload-artifact@v2
+            with:
+              name: coverage-profiles
+              path: ./coverages
+
+    
