@@ -32,8 +32,13 @@ code-coverage: unique-packages
 
 # Target to merge coverage profiles
 merge-coverage:
-	@echo 'mode: set' > ./coverage/merged.cov
-	@tail -q -n +2 ./coverage/profiles/*.cov >> ./coverage/merged.cov
+	@if ls ./coverage/profiles/*.cov 1> /dev/null 2>&1; then \
+        echo 'mode: set' > ./coverage/merged.cov; \
+        tail -q -n +2 ./coverage/profiles/*.cov >> ./coverage/merged.cov; \
+    else \
+        echo "No coverage files found"; \
+        exit 0; \
+    fi
 
 # Target to summarize and print total coverage
 summarize-coverage: merge-coverage
