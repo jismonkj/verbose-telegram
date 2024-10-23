@@ -9,20 +9,33 @@ jobs:
         - name: Create directories
           run: |
             make prep-coverage;
-        - name: Check for directory artifact
+        # - name: Check for directory artifact
+        #   id: check-artifact
+        #   run: |
+        #     if curl -sSfI "https://github.com/OWNER/REPO/actions/artifacts" | grep -q "coverage-profiles"; then
+        #        echo "coverage_profile_exists=true" >> "$GITHUB_OUTPUT"
+        #     else
+        #        echo "coverage_profile_exists=false" >> "$GITHUB_OUTPUT"
+        #     fi
+        - name: Check artifact existence
           id: check-artifact
-          run: |
-            if curl -sSfI "https://github.com/OWNER/REPO/actions/artifacts" | grep -q "coverage-profiles"; then
-              echo "::set-output name=coverage_profile_exists::true"
-            else
-              echo "::set-output name=coverage_profile_exists::false"
-            fi
+          uses: xSAVIKx/artifact-exists-action@v0
+          with:
+            name: my-directory-artifact
         - name: Download directory artifact
-          if: steps.check-artifact.outputs.coverage_profile_exists == 'true'
-          uses: actions/download-artifact@v3
+        # if: steps.check-artifact.outputs.exists == 'true'
+          uses: actions/download-artifact@v4
           with:
             name: coverage-profiles
             path: ./unit-tests
+        # - name: Check for directory artifact
+        #   id: check-artifact
+        #   run: |
+        #     if curl -sSfI "https://github.com/OWNER/REPO/actions/artifacts" | grep -q "coverage-profiles"; then
+        #         echo "coverage_profile_exists=true" >> "$GITHUB_OUTPUT"
+        #     else
+        #         echo "coverage_profile_exists=false" >> "$GITHUB_OUTPUT"
+        #     fi
         # this can be removed later.
         - name: Print directory contents
           run: ls -lah ./unit-tests
@@ -38,7 +51,7 @@ jobs:
             make code-coverage
             make summarize-coverage
         - name: Upload artifact
-          uses: actions/upload-artifact@v3
+          uses: actions/upload-artifact@v4
           with:
             name: coverage-profiles
             path: ./unit-tests
