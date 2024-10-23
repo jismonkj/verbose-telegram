@@ -1,10 +1,8 @@
 name: Code Sanity
 on:
     pull_request
-env:
-    coverage_profile_exists: false
 jobs:
-    download-coverage-profiles:
+    unit-tests-with-coverage:
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v3
@@ -15,46 +13,34 @@ jobs:
           id: check-artifact
           run: |
             if curl -sSfI "https://github.com/OWNER/REPO/actions/artifacts" | grep -q "coverage-profiles"; then
-              echo "coverage_profile_exists=true" >> $GITHUB_ENV
-              else
-              echo "coverage_profile_exists=false" >> $GITHUB_ENV
+              echo "::set-output name=coverage_profile_exists::true"
+            else
+              echo "::set-output name=coverage_profile_exists::false"
             fi
         - name: Download directory artifact
-          if: env.coverage_profile_exists == 'true'
+          if: steps.check-artifact.outputs.coverage_profile_exists == 'true'
           uses: actions/download-artifact@v3
           with:
             name: coverage-profiles
             path: ./unit-tests
-
+        # this can be removed later.
         - name: Print directory contents
           run: ls -lah ./unit-tests
-          
-    coverage-on-changes:
-        runs-on: ubuntu-latest
-        needs: download-coverage-profiles
-        steps:
-            - uses: actions/checkout@v3
-              with:
-                fetch-depth: 0  # Ensure the entire history is fetched
-            - name: Run coverage for changes
-              if: env.coverage_profile_exists == 'true'
-              run: | 
-                git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | (grep '.go' > ./coverage/changed_files.txt) || echo "No Go files changed"
-                make code-coverage-on-changes
-                make summarize-coverage
-            - name: Run coverage for all
-              if: env.coverage_profile_exists == 'false'
-              run: |
-                make code-coverage
-                make summarize-coverage
-    upload-coverage:
-        runs-on: ubuntu-latest
-        needs: [coverage-on-changes]
-        steps:
-          - name: Upload artifact
-            uses: actions/upload-artifact@v3
-            with:
-              name: coverage-profiles
-              path: ./unit-tests
+        - name: Run coverage for changes
+          if: steps.check-artifact.outputs.coverage_profile_exists == 'true'
+          run: | 
+            git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | (grep '.go' > ./coverage/changed_files.txt) || echo "No Go files changed"
+            make code-coverage-on-changes
+            make summarize-coverage
+        - name: Run coverage for all
+          if: steps.check-artifact.outputs.coverage_profile_exists == 'false'
+          run: |
+            make code-coverage
+            make summarize-coverage
+        - name: Upload artifact
+          uses: actions/upload-artifact@v3
+          with:
+            name: coverage-profiles
+            path: ./unit-tests
 
     
