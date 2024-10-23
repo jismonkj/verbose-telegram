@@ -22,8 +22,11 @@ jobs:
               with:
                 fetch-depth: 0  # Ensure the entire history is fetched
             - name: Create directories
-              run: make prep-coverage
+              run: |
+                make prep-coverage;
+                ls
             - name: Get changes
-              run: git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.after }} | grep '.go' > ./coverage/changed_files.txt
+              run: | 
+                git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | (grep '.go' > ./coverage/changed_files.txt) || echo "No Go files changed"
             - name: Run coverage
               run: make sanity
