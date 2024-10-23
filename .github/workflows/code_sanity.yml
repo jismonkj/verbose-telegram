@@ -28,7 +28,8 @@ jobs:
             CURRENT_RUN_ID=${{ github.run_id }}
             RESPONSE=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                                         -H "Accept: application/vnd.github.v3+json" \
-                                        "https://api.github.com/repos/${{ github.repository }}/actions/runs?workflow_id=${{ github.workflow }}&status=success")
+                                        "https://api.github.com/repos/${{ github.repository }}/actions/runs?status=success")
+
             echo "API Response: $RESPONSE"
             PREVIOUS_SUCCESSFUL_RUN_ID=$(echo $RESPONSE | jq --arg CURRENT_RUN_ID "$CURRENT_RUN_ID" '[.workflow_runs[] | select(.id != ($CURRENT_RUN_ID | tonumber))] | sort_by(.run_started_at) | reverse | .[0].id')
 
