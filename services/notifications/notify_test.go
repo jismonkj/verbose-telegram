@@ -6,8 +6,11 @@ func TestNotify(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-		struct{ name string }{
+		{
 			"Notify",
+		},
+		{
+			"Notify2",
 		},
 	}
 	for _, tt := range tests {
