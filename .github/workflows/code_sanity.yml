@@ -37,7 +37,12 @@ jobs:
             echo "Filtered: $FILTERED_BY_ID"
             FILT_WORKFLOW=$(echo $FILTERED_BY_ID | jq --arg workflow "${{github.workflow}}" 'select(.name == $workflow)')
             echo "Filtered workflow: $FILT_WORKFLOW"
-            PREVIOUS_SUCCESSFUL_RUN_ID=$(echo $FILT_WORKFLOW | jq 'sort_by(.run_started_at) | reverse | .[0].id')
+            SORTED=$(echo $FILT_WORKFLOW | jq 'sort_by(.run_started_at)')
+            echo "Sorted: $SORTED"
+            REVERSED=$(echo $SORTED | jq 'reverse')
+            echo "LATEST: $LATEST"
+            LATEST=$(echo $REVERSED | jq '.[0]')
+            PREVIOUS_SUCCESSFUL_RUN_ID=$(echo $LATEST | jq '.id')
 
             echo "Previous successful run ID is $PREVIOUS_SUCCESSFUL_RUN_ID"
             echo "previous_run_id=$PREVIOUS_SUCCESSFUL_RUN_ID" >> $GITHUB_OUTPUT
