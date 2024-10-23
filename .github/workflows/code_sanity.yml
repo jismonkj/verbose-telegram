@@ -22,14 +22,14 @@ jobs:
         #   uses: xSAVIKx/artifact-exists-action@v0
         #   with:
         #     name: coverage-profiles
-        - name: Get Previous Run ID
-          id: get-run-id
-          run: |
-            PREVIOUS_RUN_ID=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                                    -H "Accept: application/vnd.github.v3+json" \
-                                    "https://api.github.com/repos/${{ github.repository }}/actions/runs" \
-                                    | jq '.workflow_runs | map(select(.id != $GITHUB_RUN_ID)) | .[0].id')
-            echo "Previous run ID is $PREVIOUS_RUN_ID"
+        # - name: Get Previous Run ID
+        #   id: get-run-id
+        #   run: |
+        #     PREVIOUS_RUN_ID=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        #                             -H "Accept: application/vnd.github.v3+json" \
+        #                             "https://api.github.com/repos/${{ github.repository }}/actions/runs" \
+        #                             | jq '.workflow_runs | map(select(.id != $GITHUB_RUN_ID)) | .[0].id')
+        #     echo "Previous run ID is $PREVIOUS_RUN_ID"
         - name: Download directory artifact
           # if: steps.check-artifact.outputs.exists == 'true'
           uses: actions/download-artifact@v4
@@ -37,7 +37,8 @@ jobs:
             name: coverage-profiles
             path: ./unit-tests
             github-token: ${{ secrets.GITHUB_TOKEN }} # token with actions:read permissions on target repo
-        # - name: Check for directory artifact
+            run-id: 11478698977
+            # - name: Check for directory artifact
         #   id: check-artifact
         #   run: |
         #     if curl -sSfI "https://github.com/OWNER/REPO/actions/artifacts" | grep -q "coverage-profiles"; then
