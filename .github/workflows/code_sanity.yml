@@ -25,6 +25,6 @@ jobs:
               run: make prep-coverage
             - name: Get changes
               run: | 
-                git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '.go' > ./coverage/changed_files.txt
+                git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
             - name: Run coverage
               run: make sanity
