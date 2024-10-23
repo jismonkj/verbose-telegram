@@ -19,7 +19,7 @@ jobs:
             fi
         - name: Download directory artifact
           if: steps.check-artifact.outputs.coverage_profile_exists == 'true'
-          uses: actions/download-artifact@v2
+          uses: actions/download-artifact@v3
           with:
             name: coverage-profiles
             path: ./coverages
@@ -53,7 +53,7 @@ jobs:
         needs: [coverage-on-changes]
         steps:
           - name: Upload artifact
-            uses: actions/upload-artifact@v2
+            uses: actions/upload-artifact@v3
             with:
               name: coverage-profiles
               path: ./coverages
