@@ -20,12 +20,7 @@ jobs:
             if echo "$response" | jq -e . >/dev/null 2>&1 \
                 && [ "$(echo "$response" | jq '.artifacts' | length')" -gt 0]; then 
               
-                artifact_name="coverage-profiles"
-              branch=${{github.event.pull_request.head.ref}}
-
-              workflow_run_id=$(echo $response | jq -r --arg artifact "$artifact_name" --arg branch "$branch" '.artifacts[] \
-              | select(.name == $artifact and .workflow_run.head_branch == $branch) \
-              | .workflow_run.id' | jq -s '.[0]')
+        
 
               echo "workflow_run_id: $workflow_run_id"
             else
