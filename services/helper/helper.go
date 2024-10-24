@@ -8,5 +8,5 @@ import (
 
 func Helper() {
 	fmt.Printf("inside helper")
-	c1.C1Helper()
+	c1.C1Helper(1)
 }
