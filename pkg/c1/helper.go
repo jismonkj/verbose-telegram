@@ -7,6 +7,8 @@ func C1Helper(mode int) {
 	switch mode {
 	case 1:
 		fmt.Println("mode 1")
+	case 2:
+		fmt.Println("mode 2")
 	default:
 		fmt.Println("mode unknown")
 	}
