@@ -14,7 +14,7 @@ jobs:
           run: |
             RESPONSE=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                                         -H "Accept: application/vnd.github.v3+json" \
-                                        -sSfI "https://api.github.com/repos/${{ github.repository }}/actions/artifacts")
+                                        "https://api.github.com/repos/${{ github.repository }}/actions/artifacts")
             echo "RESPONSE: $RESPONSE"
         - name: Get Previous Successful Run ID
           id: get-run-id
