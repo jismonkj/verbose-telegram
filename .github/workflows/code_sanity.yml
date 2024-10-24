@@ -9,13 +9,12 @@ jobs:
         - name: Create directories
           run: |
             make prep-coverage;
-        - name: Check for directory artifact
+        - name: Get artifact workflow ID
           id: check-artifact
           run: |
             response=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                                         -H "Accept: application/vnd.github.v3+json" \
                                         "https://api.github.com/repos/${{ github.repository }}/actions/artifacts")
-            echo "response: $response"
 
             if echo "$response" | jq -e . >/dev/null 2>&1 && [ "$(echo "$response" | jq '.artifacts | length')" -gt 0 ]; then 
               artifact_name="coverage-profiles"
@@ -23,32 +22,13 @@ jobs:
 
               artifacts_filtered=$(echo "$response" | jq -r --arg artifact "$artifact_name" --arg branch "$branch" \
                 '.artifacts[] | select(.name == $artifact and .workflow_run.head_branch == $branch)')
-              echo "artifacts_filtered: $artifacts_filtered"
 
               workflow_run_id=$(echo "$artifacts_filtered" | jq '.workflow_run.id' | jq -s '.[0]')
               echo "workflow_run_id: $workflow_run_id"
+              echo "previous_run_id=$workflow_run_id" >> $GITHUB_OUTPUT
             else
               echo "Invalid api response/no artifacts found"
             fi
-
-        - name: Get Previous Successful Run ID
-          id: get-run-id
-          run: |
-            CURRENT_RUN_ID=${{ github.run_id }}
-            RESPONSE=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                                        -H "Accept: application/vnd.github.v3+json" \
-                                        "https://api.github.com/repos/${{ github.repository }}/actions/runs?status=success")
-
-            PREVIOUS_SUCCESSFUL_RUN_ID=$(echo $RESPONSE | jq --arg name "${{github.workflow}}" \
-                                                          --argjson exclude_id $CURRENT_RUN_ID --arg branch "${{github.event.pull_request.head.ref}}" '
-                                                          .workflow_runs
-                                                          | map(select(.name == $name and .id != $exclude_id and .head_branch == $branch))
-                                                          | max_by(.run_started_at)
-                                                          | .id' 
-                                                        )
-
-            echo "Previous successful run ID is $PREVIOUS_SUCCESSFUL_RUN_ID"
-            echo "previous_run_id=$PREVIOUS_SUCCESSFUL_RUN_ID" >> $GITHUB_OUTPUT
         - name: Download directory artifact
           continue-on-error: true
           if: steps.get-run-id.outputs.previous_run_id != ''
