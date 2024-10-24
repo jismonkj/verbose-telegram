@@ -62,6 +62,7 @@ jobs:
             make code-coverage-on-changes
             make summarize-coverage
         - name: Debug log for packages identified
+          continue-on-error: true
           run: |
             cat ./unit-tests/changed_files.txt
             cat ./unit-tests/dependent_packages.txt
