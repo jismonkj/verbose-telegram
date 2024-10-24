@@ -12,7 +12,7 @@ code-coverage:
 
 # Target to get changed Go files
 changed-files: prep-coverage
-	git diff --name-only main workflow-1st-run | grep '.go$$' > ./unit-tests/changed_files.txt
+	git diff --name-only main release | grep '.go$$' > ./unit-tests/changed_files.txt
 	@echo "<--- changed files -->"
 	@cat ./unit-tests/changed_files.txt
 	@echo "<-------------------->\n"
@@ -42,9 +42,9 @@ code-coverage-on-changes: dependent-packages
 	done < ./unit-tests/dependent_packages.txt
 
 # Target to merge coverage profiles
-merge-coverage:
 # While appending coverages, there may be duplicates
 # awk command is used for deduplicating the list 
+merge-coverage:
 	@if ls ./unit-tests/profiles/*.cov 1> /dev/null 2>&1; then \
 		# echo 'mode: set' > ./unit-tests/unit.cov; \
 		tail -q -n +2 ./unit-tests/profiles/*.cov >> ./unit-tests/unit.cov; \
