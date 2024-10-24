@@ -57,9 +57,14 @@ jobs:
           run: | 
             git fetch origin ${{ github.event.pull_request.base.ref }}
             git fetch origin ${{ github.event.pull_request.head.ref }}
-            git diff --name-only origin/${{ github.event.pull_request.base.ref }} origin/${{ github.event.pull_request.head.ref }} | (grep '.go' > ./unit-testschanged_files.txt) || echo "No Go files changed"
+            git diff --name-only origin/${{ github.event.pull_request.base.ref }} origin/${{ github.event.pull_request.head.ref }} | (grep '.go' > ./unit-tests/changed_files.txt) || echo "No Go files changed"
             make code-coverage-on-changes
             make summarize-coverage
+        - name: Debug log for packages identified
+          run: |
+            cat ./unit-tests/changed_files.txt
+            cat ./unit-tests/dependent_packages.txt
+            cat ./unit-tests/affected_packages.txt
         - name: Run coverage for all
           if: steps.check-artifact.outputs.previous_run_id == ''
           run: |
