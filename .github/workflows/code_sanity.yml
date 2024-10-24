@@ -18,17 +18,14 @@ jobs:
             echo "response: $response"
 
             if echo "$response" | jq -e . >/dev/null 2>&1 && [ "$(echo "$response" | jq '.artifacts | length')" -gt 0 ]; then 
-                                      artifact_name="coverage-profiles"
-              branch=${{github.event.pull_request.head.ref}}
+              artifact_name="coverage-profiles"
+              branch="${{ github.event.pull_request.head.ref }}"
 
-              artifacts_filtered=$(echo $response | jq -r --arg artifact "$artifact_name" --arg branch "$branch" '.artifacts[] \
-              | select(.name == $artifact and .workflow_run.head_branch == $branch)')
+              artifacts_filtered=$(echo "$response" | jq -r --arg artifact "$artifact_name" --arg branch "$branch" \
+                '.artifacts[] | select(.name == $artifact and .workflow_run.head_branch == $branch)')
               echo "artifacts_filtered: $artifacts_filtered"
 
-              workflow_run_id=$(echo $artifacts_filtered | jq \
-              '.workflow_run.id' | jq -s '.[0]')
-
-
+              workflow_run_id=$(echo "$artifacts_filtered" | jq '.workflow_run.id' | jq -s '.[0]')
               echo "workflow_run_id: $workflow_run_id"
             else
               echo "Invalid api response/no artifacts found"
