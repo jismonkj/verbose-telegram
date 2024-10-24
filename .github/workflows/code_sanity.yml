@@ -9,47 +9,38 @@ jobs:
         - name: Create directories
           run: |
             make prep-coverage;
-        # - name: Check for directory artifact
-        #   id: check-artifact
-        #   run: |
-        #     if curl -sSfI "https://github.com/OWNER/REPO/actions/artifacts" | grep -q "coverage-profiles"; then
-        #        echo "coverage_profile_exists=true" >> "$GITHUB_OUTPUT"
-        #     else
-        #        echo "coverage_profile_exists=false" >> "$GITHUB_OUTPUT"
-        #     fi
-        # - name: Check artifact existence
-        #   id: check-artifact
-        #   uses: xSAVIKx/artifact-exists-action@v0
-        #   with:
-        #     name: coverage-profiles
-        - name: Get Previous Successful Run ID
-          id: get-run-id
+        - name: Get artifact workflow ID
+          id: check-artifact
           run: |
-            CURRENT_RUN_ID=${{ github.run_id }}
-            RESPONSE=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            response=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                                         -H "Accept: application/vnd.github.v3+json" \
-                                        "https://api.github.com/repos/${{ github.repository }}/actions/runs?status=success")
+                                        "https://api.github.com/repos/${{ github.repository }}/actions/artifacts")
 
-            echo "API Response: $RESPONSE"
+            if echo "$response" | jq -e . >/dev/null 2>&1 && [ "$(echo "$response" | jq '.artifacts | length')" -gt 0 ]; then 
+              artifact_name="coverage-profiles"
+              branch="${{ github.event.pull_request.head.ref }}"
 
-            PREVIOUS_SUCCESSFUL_RUN_ID=$(echo $RESPONSE | jq --arg name "${{github.workflow}}" --argjson exclude_id $CURRENT_RUN_ID '
-                                                              .workflow_runs
-                                                              | map(select(.name == $name and .id != $exclude_id))
-                                                              | max_by(.run_started_at)
-                                                              | .id' 
-                                                            )
+              artifacts_filtered=$(echo "$response" | jq -r --arg artifact "$artifact_name" --arg branch "$branch" \
+                '.artifacts[] | select(.name == $artifact and .workflow_run.head_branch == $branch)')
 
-            echo "Previous successful run ID is $PREVIOUS_SUCCESSFUL_RUN_ID"
-            echo "previous_run_id=$PREVIOUS_SUCCESSFUL_RUN_ID" >> $GITHUB_OUTPUT
+              workflow_run_id=$(echo "$artifacts_filtered" | jq '.workflow_run.id' | jq -s '.[0]')
+              echo "workflow_run_id: $workflow_run_id"
+              echo "previous_run_id=$workflow_run_id" >> $GITHUB_OUTPUT
+            else
+              echo "Invalid api response/no artifacts found"
+            fi
+        - name: Debug log for workflow id found
+          run: |
+            echo "steps.check-artifact.outputs.previous_run_id: ${{steps.check-artifact.outputs.previous_run_id}}"
         - name: Download directory artifact
           continue-on-error: true
-          if: steps.get-run-id.outputs.previous_run_id != ''
+          if: ${{ steps.check-artifact.outputs.previous_run_id != '' }}
           uses: actions/download-artifact@v4
           with:
             name: coverage-profiles
             path: ./unit-tests
             github-token: ${{ secrets.GITHUB_TOKEN }} # token with actions:read permissions on target repo
-            run-id: ${{steps.get-run-id.outputs.previous_run_id}}
+            run-id: ${{steps.check-artifact.outputs.previous_run_id}}
             # - name: Check for directory artifact
         #   id: check-artifact
         #   run: |
@@ -62,13 +53,20 @@ jobs:
         - name: Print directory contents
           run: ls -lah ./unit-tests
         - name: Run coverage for changes
-          if: steps.get-run-id.outputs.previous_run_id != ''
+          if: steps.check-artifact.outputs.previous_run_id != ''
           run: | 
-            git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | (grep '.go' > ./coverage/changed_files.txt) || echo "No Go files changed"
+            git fetch origin ${{ github.event.pull_request.base.ref }}
+            git fetch origin ${{ github.event.pull_request.head.ref }}
+            git diff --name-only origin/${{ github.event.pull_request.base.ref }} origin/${{ github.event.pull_request.head.ref }} | (grep '.go' > ./unit-tests/changed_files.txt) || echo "No Go files changed"
             make code-coverage-on-changes
             make summarize-coverage
+        - name: Debug log for packages identified
+          run: |
+            cat ./unit-tests/changed_files.txt
+            cat ./unit-tests/dependent_packages.txt
+            cat ./unit-tests/affected_packages.txt
         - name: Run coverage for all
-          if: steps.get-run-id.outputs.previous_run_id == ''
+          if: steps.check-artifact.outputs.previous_run_id == ''
           run: |
             make code-coverage
             make summarize-coverage
