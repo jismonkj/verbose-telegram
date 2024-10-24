@@ -9,19 +9,13 @@ jobs:
         - name: Create directories
           run: |
             make prep-coverage;
-        # - name: Check for directory artifact
-        #   id: check-artifact
-        #   run: |
-        #     if curl -sSfI "https://github.com/OWNER/REPO/actions/artifacts" | grep -q "coverage-profiles"; then
-        #        echo "coverage_profile_exists=true" >> "$GITHUB_OUTPUT"
-        #     else
-        #        echo "coverage_profile_exists=false" >> "$GITHUB_OUTPUT"
-        #     fi
-        # - name: Check artifact existence
-        #   id: check-artifact
-        #   uses: xSAVIKx/artifact-exists-action@v0
-        #   with:
-        #     name: coverage-profiles
+        - name: Check for directory artifact
+          id: check-artifact
+          run: |
+            RESPONSE=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                                        -H "Accept: application/vnd.github.v3+json" \
+                                        -sSfI "https://github.com/${{ github.repository }}/actions/artifacts")
+            echo "RESPONSE: $RESPONSE"
         - name: Get Previous Successful Run ID
           id: get-run-id
           run: |
@@ -63,7 +57,7 @@ jobs:
         - name: Run coverage for changes
           if: steps.get-run-id.outputs.previous_run_id != ''
           run: | 
-            git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | (grep '.go' > ./coverage/changed_files.txt) || echo "No Go files changed"
+            git diff --name-only ${{ github.event.pull_request.base.ref }} ${{ github.event.pull_request.head.sha }} | (grep '.go' > ./coverage/changed_files.txt) || echo "No Go files changed"
             make code-coverage-on-changes
             make summarize-coverage
         - name: Run coverage for all
