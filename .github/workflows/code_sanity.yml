@@ -57,7 +57,7 @@ jobs:
           run: | 
             git fetch origin ${{ github.event.pull_request.base.ref }}
             git fetch origin ${{ github.event.pull_request.head.ref }}
-            git diff --name-only origin/${{ github.event.pull_request.base.ref }} ${{ github.event.pull_request.head.ref }} | (grep '.go' > ./coverage/changed_files.txt) || echo "No Go files changed"
+            git diff --name-only origin/${{ github.event.pull_request.base.ref }} origin/${{ github.event.pull_request.head.ref }} | (grep '.go' > ./coverage/changed_files.txt) || echo "No Go files changed"
             make code-coverage-on-changes
             make summarize-coverage
         - name: Run coverage for all
