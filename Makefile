@@ -21,7 +21,7 @@ changed-files: prep-coverage
 affected-packages:
 	@if [ -s ./unit-tests/changed_files.txt ]; then \
 		for file in $$(cat ./unit-tests/changed_files.txt); do \
-			go list -f '{{.ImportPath}}' $$(dirname $$file); \
+			go list -f '{{.ImportPath}}' ./$$(dirname $$file); \
 		done | sort | uniq > ./unit-tests/affected_packages.txt; \
 	fi
 
