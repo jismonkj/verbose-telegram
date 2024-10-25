@@ -7,7 +7,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run custom action
-        uses: ./.github/actions/my-action
+        uses: ./.github/workflows/helper
 
   unit-tests-with-coverage:
     runs-on: ubuntu-latest
