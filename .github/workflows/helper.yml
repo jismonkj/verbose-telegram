@@ -1,10 +1,11 @@
-name: Helpers
-on:
-    workflow_call
-
-jobs: 
-    just-a-job:
-        runs-on: ubuntu-latest
-        steps:
-            - name: uses nested workflow
-              uses: ./.github/workflows/util.yml
+name: 'Helper Workflow'
+on: workflow_call
+jobs:
+  just-a-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Random log
+        run: |
+          echo "Inside helper workflow"
