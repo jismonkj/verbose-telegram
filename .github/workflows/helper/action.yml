@@ -3,5 +3,7 @@ description: 'This action prints a message'
 runs:
   using: 'composite'
   steps:
-    - run: echo "Hello from the custom action!"
+    - run: |
+        echo "Hello from the custom action!"
+        echo "out='true'" >> $GITHUB_OUTPUT
       shell: bash
