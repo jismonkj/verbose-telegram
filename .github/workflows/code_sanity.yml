@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: log out
         run: |
-          echo "out from invoked action: ${{needs.use-nested-jobs.outputs.out}}"
+          echo "out from invoked action: ${{needs.use-nested-jobs.outputs.out_data}}"
 
   unit-tests-with-coverage:
     runs-on: ubuntu-latest
