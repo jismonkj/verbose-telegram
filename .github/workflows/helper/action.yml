@@ -1,10 +1,10 @@
 name: 'My Custom Action'
 description: 'This action prints a message'
+outputs:
+  myOutput:
+    description: 
 runs:
   using: 'composite'
-  outputs:
-    myOutput:
-      description: 
   steps:
     - run: |
         echo "Hello from the custom action!"
