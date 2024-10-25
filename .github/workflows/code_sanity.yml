@@ -3,8 +3,7 @@ on:
     pull_request
 jobs:
   use-nested-jobs:
-    - uses: ./.github/workflows/helper.yml#just-a-job
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/helper.yml#just-a-job
 
   unit-tests-with-coverage:
     runs-on: ubuntu-latest
