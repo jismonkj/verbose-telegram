@@ -7,15 +7,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run custom action
+        id: action-run
         uses: ./.github/workflows/helper
-    
-  print-out:
-    runs-on: ubuntu-latest
-    needs: use-nested-jobs
-    steps:
       - name: log out
         run: |
-          echo "out from invoked action: ${{needs.use-nested-jobs.outputs.out_data}}"
+          echo "out from invoked action: ${{steps.action-run.outputs.out_data}}"
+          ls -alh ./
 
   unit-tests-with-coverage:
     runs-on: ubuntu-latest

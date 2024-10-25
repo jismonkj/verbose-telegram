@@ -2,9 +2,14 @@ name: 'My Custom Action'
 description: 'This action prints a message'
 runs:
   using: 'composite'
+  outputs:
+    myOutput:
+      description: 
   steps:
     - run: |
         echo "Hello from the custom action!"
         out_put="testing it"
         echo "out_data=$out_put" >> $GITHUB_OUTPUT
+        echo "testing files" >> test.txt
+        ls -alh ./
       shell: bash
