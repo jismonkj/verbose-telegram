@@ -1,0 +1,11 @@
+name: Utils
+on:
+    workflow_call
+
+jobs: 
+    just-a-util-job:
+        runs-on: ubuntu-latest
+        steps:
+            - name: random log
+              run: |
+                echo "Inside util"
