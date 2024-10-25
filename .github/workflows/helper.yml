@@ -1,9 +1,0 @@
-name: 'Helper Workflow'
-on: workflow_call
-jobs:
-  just-a-job:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Random log
-        run: |
-          echo "Inside helper workflow"
