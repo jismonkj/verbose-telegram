@@ -4,3 +4,4 @@ runs:
   using: 'composite'
   steps:
     - run: echo "Hello from the custom action!"
+      shell: bash
