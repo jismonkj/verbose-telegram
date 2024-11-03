@@ -1,3 +1,9 @@
+# Define variables
+BASE_PATH=github.com/jismonkj/verbose-telegram
+PACKAGES_FILE=./unit-tests/dependent_packages.txt
+COVERAGE_FILE=./unit-tests/unit.cov
+TEMP_FILE=./unit-tests/temp.cov
+
 .PHONY: prep-coverage
 
 prep-coverage:
@@ -27,24 +33,38 @@ affected-packages:
 
 # Find dependent packages
 dependent-packages: affected-packages
-# find the repo name from go.mod
-	@MODULE_PATH=$$(cat go.mod | grep '^module' | awk '{print $$2}'); \
-	for pkg in $$(cat ./unit-tests/affected_packages.txt); do \
-	  go list -f '{{.ImportPath}}:{{.Deps}}' ./... | grep $$pkg | awk -F ':' '{print $$1}'; \
-	done | sort | uniq | sed "s|$$MODULE_PATH||" > ./unit-tests/dependent_packages.txt
+@MODULE_PATH=$$(cat go.mod | grep '^module' | awk '{print $$2}'); \
+    PREV_DEPENDENT_PACKAGES="" && \
+    CURRENT_DEPENDENT_PACKAGES=$$(cat ./unit-tests/affected_packages.txt) && \
+    while [ "$$PREV_DEPENDENT_PACKAGES" != "$$CURRENT_DEPENDENT_PACKAGES" ]; do \
+      PREV_DEPENDENT_PACKAGES=$$CURRENT_DEPENDENT_PACKAGES; \
+      for pkg in $$CURRENT_DEPENDENT_PACKAGES; do \
+        go list -f '{{.ImportPath}}:{{.Deps}}' ./... | grep $$pkg | awk -F ':' '{print $$1}' | sed "s|$$MODULE_PATH||"; \
+      done | sort | uniq > ./unit-tests/new_dependent_packages.txt && \
+      CURRENT_DEPENDENT_PACKAGES=$$(cat ./unit-tests/affected_packages.txt ./unit-tests/new_dependent_packages.txt | sort | uniq); \
+    done && \
+    echo $$CURRENT_DEPENDENT_PACKAGES > ./unit-tests/dependent_packages.txt
 
 # Target to run tests for the unique packages
-code-coverage-on-changes: dependent-packages
+code-coverage-on-changes:
 	@while read -r pkg; do \
 		echo "Running tests for package: $$pkg"; \
 		pkg_profile=$$(echo $${pkg} | sed 's/[\/\\]/_/g'); \
 		go test -v -coverpkg=./... -covermode=set -coverprofile=./unit-tests/profiles/$$pkg_profile.cov ./$$pkg; \
 	done < ./unit-tests/dependent_packages.txt
 
+# Target to filter coverage file
+filter-coverage:
+    # Read the package path and construct the pattern
+	@PATTERN=$$(awk '{print "^$(BASE_PATH)/" $$1 "/[^/]+\\.go"}' $(PACKAGES_FILE) | paste -s -d '|' -); \
+    echo "Pattern: $$PATTERN"; \
+    grep -v -E "$$PATTERN" $(COVERAGE_FILE) >> $(TEMP_FILE); \
+    mv $(TEMP_FILE) $(COVERAGE_FILE)
+
 # Target to merge coverage profiles
 # While appending coverages, there may be duplicates
 # awk command is used for deduplicating the list 
-merge-coverage:
+merge-coverage: filter-coverage
 	@if ls ./unit-tests/profiles/*.cov 1> /dev/null 2>&1; then \
 		# echo 'mode: set' > ./unit-tests/unit.cov; \
 		tail -q -n +2 ./unit-tests/profiles/*.cov >> ./unit-tests/unit.cov; \
