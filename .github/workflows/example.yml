@@ -45,3 +45,24 @@ jobs:
   #     - name: test
   #       run: make test
 
+  # references:
+  #   runs-on: ubuntu
+  #   steps:
+  #     - name: Get Previous Successful Run ID
+  #       id: get-run-id
+  #       run: |
+  #         CURRENT_RUN_ID=${{ github.run_id }}
+  #         RESPONSE=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+  #                                     -H "Accept: application/vnd.github.v3+json" \
+  #                                     "https://api.github.com/repos/${{ github.repository }}/actions/runs?status=success")
+
+  #         PREVIOUS_SUCCESSFUL_RUN_ID=$(echo $RESPONSE | jq --arg name "${{github.workflow}}" \
+  #                                                       --argjson exclude_id $CURRENT_RUN_ID --arg branch "${{github.event.pull_request.head.ref}}" '
+  #                                                       .workflow_runs
+  #                                                       | map(select(.name == $name and .id != $exclude_id and .head_branch == $branch))
+  #                                                       | max_by(.run_started_at)
+  #                                                       | .id' 
+  #                                                     )
+
+  #         echo "Previous successful run ID is $PREVIOUS_SUCCESSFUL_RUN_ID"
+  #         echo "previous_run_id=$PREVIOUS_SUCCESSFUL_RUN_ID" >> $GITHUB_OUTPUT

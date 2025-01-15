@@ -1,0 +1,47 @@
+name: Exception on merge
+on: pull_request
+
+jobs:
+  check-merge:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with: 
+        fetch-depth: 7  # Corrected parameter name to fetch-depth
+
+    - name: Check for merge commits
+      id: check_merge
+      run: |
+        echo "##[group]Checking for merge commits"
+        COMMITS=$(git log --pretty=format:'%H' ${{ github.event.before }}..${{ github.event.after }}) || { echo "merge=true" >> $GITHUB_OUTPUT; echo "Error: Invalid commit range or commit hash not found."; exit 0; }
+        echo "Commits in the push: $COMMITS"
+        MERGE_FOUND=false
+        for COMMIT in $COMMITS; do
+          PARENTS=$(git log -1 --pretty=%P $COMMIT)
+          PARENT_COUNT=$(echo $PARENTS | wc -w)
+          if [[ $PARENT_COUNT -gt 1 ]]; then
+            echo "merge=true" >> $GITHUB_OUTPUT
+            echo "Merge commit found: $COMMIT"
+            MERGE_FOUND=true
+            break
+          fi
+        done
+        if [[ $MERGE_FOUND == false ]]; then 
+          echo "merge=false" >> $GITHUB_OUTPUT
+          echo "No merge commits found"
+        fi
+        echo "##[endgroup]"
+
+    - name: Run actions if a merge commit is detected
+      if: steps.check_merge.outputs.merge == 'true'
+      run: |
+        echo "Running actions for merge commits..."
+        # Add your actions here
+
+    - name: Run actions if no merge commit is detected
+      if: steps.check_merge.outputs.merge == 'false'
+      run: |
+        echo "Running actions for non-merge commits..."
+        # Add your actions here
