@@ -15,8 +15,8 @@ jobs:
         echo "##[group]Determining commit range"
         echo "GitHub event name: $GITHUB_EVENT_NAME"
         echo "::set-output name=from::${{ github.event.before }}"
-        echo "::set-output name=to::${{ github.event.after }}"
-        echo "commits:  $(git log -5)"
+        echo "::set-output name=to::${{ github.sha }}"
+        echo "commits:  $(git log -1)"
         echo "##[endgroup]"
 
     - name: Check for merge commits
