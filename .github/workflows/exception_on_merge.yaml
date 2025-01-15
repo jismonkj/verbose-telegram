@@ -26,19 +26,23 @@ jobs:
         echo "##[group]Checking for merge commits"
         COMMITS=$(git rev-list ${{ steps.commit_range.outputs.from }}..${{ steps.commit_range.outputs.to }}) || { echo "merge=true" >> $GITHUB_OUTPUT; echo "Error: Invalid commit range or commit hash not found."; exit 0; }
         echo "Commits in the push: $COMMITS"
+        MERGE_FOUND=false
         for COMMIT in $COMMITS; do
           PARENTS=$(git log -1 --pretty=%P $COMMIT)
           PARENT_COUNT=$(echo $PARENTS | wc -w)
           if [[ $PARENT_COUNT -gt 1 ]]; then
             echo "merge=true" >> $GITHUB_OUTPUT
             echo "Merge commit found: $COMMIT"
+            MERGE_FOUND=true
             break
           fi
         done
-        if [[ -z "${{ steps.check_merge.outputs.merge }}" ]]; then
-          echo "merge=false" >> $GITHUB_OUTPUT
-          echo "No merge commits found"
+       
+        if [[ $MERGE_FOUND == false ]]; then 
+          echo "merge=false" >> $GITHUB_OUTPUT 
+          echo "No merge commits found" 
         fi
+
         echo "##[endgroup]"
 
     - name: Run actions if a merge commit is detected
