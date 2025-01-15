@@ -9,35 +9,34 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
       with: 
-        fetch-depth: 7
+        fetch-depth: 7  # Corrected parameter name to fetch-depth
 
-    - name: Get commit range
+    - name: Get commit range and log event name
       id: commit_range
       run: |
-        echo "##[group]Determining commit range"
+        echo "##[group]Determining commit range and logging event name"
         echo "GitHub event name: $GITHUB_EVENT_NAME"
-        echo "::set-output name=from::${{ github.event.before }}"
-        echo "::set-output name=to::${{ github.sha }}"
-        echo "commits:  $(git log -1)"
+        echo "from=${{ github.event.before }}" >> $GITHUB_OUTPUT
+        echo "to=${{ github.sha }}" >> $GITHUB_OUTPUT
         echo "##[endgroup]"
 
     - name: Check for merge commits
       id: check_merge
       run: |
         echo "##[group]Checking for merge commits"
-        COMMITS=$(git rev-list ${{ steps.commit_range.outputs.from }}..${{ steps.commit_range.outputs.to }})
+        COMMITS=$(git rev-list ${{ steps.commit_range.outputs.from }}..${{ steps.commit_range.outputs.to }}) || { echo "merge=true" >> $GITHUB_OUTPUT; echo "Error: Invalid commit range or commit hash not found."; exit 0; }
         echo "Commits in the push: $COMMITS"
         for COMMIT in $COMMITS; do
           PARENTS=$(git log -1 --pretty=%P $COMMIT)
           PARENT_COUNT=$(echo $PARENTS | wc -w)
           if [[ $PARENT_COUNT -gt 1 ]]; then
-            echo "::set-output name=merge::true"
+            echo "merge=true" >> $GITHUB_OUTPUT
             echo "Merge commit found: $COMMIT"
             break
           fi
         done
         if [[ -z "${{ steps.check_merge.outputs.merge }}" ]]; then
-          echo "::set-output name=merge::false"
+          echo "merge=false" >> $GITHUB_OUTPUT
           echo "No merge commits found"
         fi
         echo "##[endgroup]"
