@@ -1,0 +1,53 @@
+name: Exception on merge
+on: pull_request
+
+jobs:
+  check-merge:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Get commit range
+      id: commit_range
+      run: |
+        echo "##[group]Determining commit range"
+        if [[ $GITHUB_EVENT_NAME == "push" ]]; then
+          echo "::set-output name=from::${{ github.event.before }}"
+          echo "::set-output name=to::${{ github.sha }}"
+        fi
+        echo "##[endgroup]"
+
+    - name: Check for merge commits
+      id: check_merge
+      run: |
+        echo "##[group]Checking for merge commits"
+        COMMITS=$(git rev-list ${{ steps.commit_range.outputs.from }}..${{ steps.commit_range.outputs.to }})
+        echo "Commits in the push: $COMMITS"
+        for COMMIT in $COMMITS; do
+          PARENTS=$(git log -1 --pretty=%P $COMMIT)
+          PARENT_COUNT=$(echo $PARENTS | wc -w)
+          if [[ $PARENT_COUNT -gt 1 ]]; then
+            echo "::set-output name=merge::true"
+            echo "Merge commit found: $COMMIT"
+            break
+          fi
+        done
+        if [[ -z "${{ steps.check_merge.outputs.merge }}" ]]; then
+          echo "::set-output name=merge::false"
+          echo "No merge commits found"
+        fi
+        echo "##[endgroup]"
+
+    - name: Run actions if a merge commit is detected
+      if: steps.check_merge.outputs.merge == 'true'
+      run: |
+        echo "Running actions for merge commits..."
+        # Add your actions here
+
+    - name: Run actions if no merge commit is detected
+      if: steps.check_merge.outputs.merge == 'false'
+      run: |
+        echo "Running actions for non-merge commits..."
+        # Add your actions here

@@ -1,6 +1,7 @@
 name: Code Sanity
 on:
-    pull_request
+    pull_request:
+      branches-ignore: ./*
 jobs:
     unit-tests-with-coverage:
       runs-on: ubuntu-latest
