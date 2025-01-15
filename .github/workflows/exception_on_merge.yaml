@@ -8,12 +8,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-      with:
-        fetch-depth: 5  # Fetch the last 20 commits
     - name: List commit IDs
       run: |
         git log --pretty=format:'%H' ${{ github.event.before }}..${{ github.event.after }}
-        
+
     - name: Check for merge commits using GitHub Script
       id: check_merge
       uses: actions/github-script@v6
