@@ -20,7 +20,7 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             per_page: 7, // Adjust as needed
-            sha: context.payload.before
+            sha: 'e4d185587a39b7ce9463cb433819c56ed2b5307d'
           });
 
           let mergeFound = false;
@@ -31,6 +31,7 @@ jobs:
               console.log(`Merge commit found: ${commit.sha}`);
               break;
             }
+            console.log(`commit.sha: ${commit.sha}`)
           }
 
           if (!mergeFound) {
