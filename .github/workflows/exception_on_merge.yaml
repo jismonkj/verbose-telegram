@@ -8,7 +8,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-      with: 
+      with:
         fetch-depth: 7
 
     - name: Get commit range and log event name
@@ -16,6 +16,7 @@ jobs:
       run: |
         echo "##[group]Determining commit range and logging event name"
         echo "GitHub event name: $GITHUB_EVENT_NAME"
+        echo "Ref: $GITHUB_REF"
         echo "from=${{ github.event.before }}" >> $GITHUB_OUTPUT
         echo "to=${{ github.sha }}" >> $GITHUB_OUTPUT
         echo "##[endgroup]"
@@ -28,17 +29,18 @@ jobs:
         echo "Commits in the push: $COMMITS"
         MERGE_FOUND=false
         for COMMIT in $COMMITS; do
-          if git cat-file -t $COMMIT >/dev/null 2>&1; then
+          # Ensure the commit exists and is not a synthetic merge
+          if git rev-parse --quiet --verify $COMMIT >/dev/null; then
             PARENTS=$(git log -1 --pretty=%P $COMMIT)
             PARENT_COUNT=$(echo $PARENTS | wc -w)
             if [[ $PARENT_COUNT -gt 1 ]]; then
               echo "merge=true" >> $GITHUB_OUTPUT
-              echo "Merge commit found: $COMMIT"
+              echo "Real merge commit found: $COMMIT"
               MERGE_FOUND=true
               break
             fi
           else
-            echo "Warning: Commit $COMMIT does not exist in history"
+            echo "Skipping synthetic merge commit: $COMMIT"
           fi
         done
         if [[ $MERGE_FOUND == false ]]; then
