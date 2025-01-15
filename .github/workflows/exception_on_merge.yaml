@@ -28,7 +28,7 @@ jobs:
             break
           fi
         done
-        if [[ $MERGE_FOUND==false ]]; then
+        if [[ $MERGE_FOUND == false ]]; then 
           echo "merge=false" >> $GITHUB_OUTPUT
           echo "No merge commits found"
         fi
