@@ -9,7 +9,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
       with: 
-        fetch-depth: 7  # Corrected parameter name to fetch-depth
+        fetch-depth: 7
 
     - name: Get commit range and log event name
       id: commit_range
@@ -20,38 +20,40 @@ jobs:
         echo "to=${{ github.sha }}" >> $GITHUB_OUTPUT
         echo "##[endgroup]"
 
-    - name: Check for merge commits
+    - name: Check for real merge commits
       id: check_merge
       run: |
-        echo "##[group]Checking for merge commits"
-        COMMITS=$(git rev-list ${{ steps.commit_range.outputs.from }}..${{ steps.commit_range.outputs.to }}) || { echo "merge=true" >> $GITHUB_OUTPUT; echo "Error: Invalid commit range or commit hash not found."; exit 0; }
+        echo "##[group]Checking for real merge commits"
+        COMMITS=$(git rev-list ${{ steps.commit_range.outputs.from }}..${{ steps.commit_range.outputs.to }})
         echo "Commits in the push: $COMMITS"
         MERGE_FOUND=false
         for COMMIT in $COMMITS; do
-          PARENTS=$(git log -1 --pretty=%P $COMMIT)
-          PARENT_COUNT=$(echo $PARENTS | wc -w)
-          if [[ $PARENT_COUNT -gt 1 ]]; then
-            echo "merge=true" >> $GITHUB_OUTPUT
-            echo "Merge commit found: $COMMIT"
-            MERGE_FOUND=true
-            break
+          if git cat-file -t $COMMIT >/dev/null 2>&1; then
+            PARENTS=$(git log -1 --pretty=%P $COMMIT)
+            PARENT_COUNT=$(echo $PARENTS | wc -w)
+            if [[ $PARENT_COUNT -gt 1 ]]; then
+              echo "merge=true" >> $GITHUB_OUTPUT
+              echo "Merge commit found: $COMMIT"
+              MERGE_FOUND=true
+              break
+            fi
+          else
+            echo "Warning: Commit $COMMIT does not exist in history"
           fi
         done
-       
-        if [[ $MERGE_FOUND == false ]]; then 
-          echo "merge=false" >> $GITHUB_OUTPUT 
-          echo "No merge commits found" 
+        if [[ $MERGE_FOUND == false ]]; then
+          echo "merge=false" >> $GITHUB_OUTPUT
+          echo "No real merge commits found"
         fi
-
         echo "##[endgroup]"
 
-    - name: Run actions if a merge commit is detected
+    - name: Run actions if a real merge commit is detected
       if: steps.check_merge.outputs.merge == 'true'
       run: |
-        echo "Running actions for merge commits..."
+        echo "Running actions for real merge commits..."
         # Add your actions here
 
-    - name: Run actions if no merge commit is detected
+    - name: Run actions if no real merge commit is detected
       if: steps.check_merge.outputs.merge == 'false'
       run: |
         echo "Running actions for non-merge commits..."
