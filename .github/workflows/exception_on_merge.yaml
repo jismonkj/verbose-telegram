@@ -14,10 +14,8 @@ jobs:
       run: |
         echo "##[group]Determining commit range"
         echo "GitHub event name: $GITHUB_EVENT_NAME"
-        if [[ $GITHUB_EVENT_NAME == "push" ]]; then
-          echo "::set-output name=from::${{ github.event.before }}"
-          echo "::set-output name=to::${{ github.sha }}"
-        fi
+        echo "::set-output name=from::${{ github.event.before }}"
+        echo "::set-output name=to::${{ github.sha }}"
         echo "##[endgroup]"
 
     - name: Check for merge commits
