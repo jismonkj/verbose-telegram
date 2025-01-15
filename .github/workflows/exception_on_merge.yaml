@@ -8,37 +8,31 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: List commit IDs
-      run: |
-        git log --pretty=format:'%H' ${{ github.event.before }}..${{ github.event.after }}
+      with: 
+        fetch-depth: 7  # Corrected parameter name to fetch-depth
 
-    - name: Check for merge commits using GitHub Script
+    - name: Check for merge commits
       id: check_merge
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const commitList = await github.rest.repos.listCommits({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            per_page: 7, // Adjust as needed
-            sha: 'e4d185587a39b7ce9463cb433819c56ed2b5307d'
-          });
-
-          let mergeFound = false;
-          for (const commit of commitList.data) {
-            if (commit.parents.length > 1) {
-              mergeFound = true;
-              core.setOutput('merge', 'true');
-              console.log(`Merge commit found: ${commit.sha}`);
-              break;
-            }
-            console.log(`commit.sha: ${commit.sha}`)
-          }
-
-          if (!mergeFound) {
-            core.setOutput('merge', 'false');
-            console.log("No merge commits found");
-          }
+      run: |
+        echo "##[group]Checking for merge commits"
+        COMMITS=$(git log --pretty=format:'%H' ${{ github.event.before }}..${{ github.event.after }}) || { echo "merge=true" >> $GITHUB_OUTPUT; echo "Error: Invalid commit range or commit hash not found."; exit 0; }
+        echo "Commits in the push: $COMMITS"
+        MERGE_FOUND=false
+        for COMMIT in $COMMITS; do
+          PARENTS=$(git log -1 --pretty=%P $COMMIT)
+          PARENT_COUNT=$(echo $PARENTS | wc -w)
+          if [[ $PARENT_COUNT -gt 1 ]]; then
+            echo "merge=true" >> $GITHUB_OUTPUT
+            echo "Merge commit found: $COMMIT"
+            MERGE_FOUND=true
+            break
+          fi
+        done
+        if [[ MERGE_FOUND==false ]]; then
+          echo "merge=false" >> $GITHUB_OUTPUT
+          echo "No merge commits found"
+        fi
+        echo "##[endgroup]"
 
     - name: Run actions if a merge commit is detected
       if: steps.check_merge.outputs.merge == 'true'
