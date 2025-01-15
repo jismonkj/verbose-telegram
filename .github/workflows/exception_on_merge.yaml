@@ -9,53 +9,42 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
       with:
-        fetch-depth: 7
+        fetch-depth: 5  # Fetch the last 20 commits
 
-    - name: Get commit range and log event name
-      id: commit_range
-      run: |
-        echo "##[group]Determining commit range and logging event name"
-        echo "GitHub event name: $GITHUB_EVENT_NAME"
-        echo "Ref: $GITHUB_REF"
-        echo "from=${{ github.event.before }}" >> $GITHUB_OUTPUT
-        echo "to=${{ github.sha }}" >> $GITHUB_OUTPUT
-        echo "##[endgroup]"
-
-    - name: Check for real merge commits
+    - name: Check for merge commits using GitHub Script
       id: check_merge
-      run: |
-        echo "##[group]Checking for real merge commits"
-        COMMITS=$(git rev-list ${{ steps.commit_range.outputs.from }}..${{ steps.commit_range.outputs.to }})
-        echo "Commits in the push: $COMMITS"
-        MERGE_FOUND=false
-        for COMMIT in $COMMITS; do
-          # Ensure the commit exists and is not a synthetic merge
-          if git rev-parse --quiet --verify $COMMIT >/dev/null; then
-            PARENTS=$(git log -1 --pretty=%P $COMMIT)
-            PARENT_COUNT=$(echo $PARENTS | wc -w)
-            if [[ $PARENT_COUNT -gt 1 ]]; then
-              echo "merge=true" >> $GITHUB_OUTPUT
-              echo "Real merge commit found: $COMMIT"
-              MERGE_FOUND=true
-              break
-            fi
-          else
-            echo "Skipping synthetic merge commit: $COMMIT"
-          fi
-        done
-        if [[ $MERGE_FOUND == false ]]; then
-          echo "merge=false" >> $GITHUB_OUTPUT
-          echo "No real merge commits found"
-        fi
-        echo "##[endgroup]"
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const commitList = await github.repos.listCommits({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 7, // Adjust as needed
+            sha: context.payload.before
+          });
 
-    - name: Run actions if a real merge commit is detected
+          let mergeFound = false;
+          for (const commit of commitList.data) {
+            if (commit.parents.length > 1) {
+              mergeFound = true;
+              core.setOutput('merge', 'true');
+              console.log(`Merge commit found: ${commit.sha}`);
+              break;
+            }
+          }
+
+          if (!mergeFound) {
+            core.setOutput('merge', 'false');
+            console.log("No merge commits found");
+          }
+
+    - name: Run actions if a merge commit is detected
       if: steps.check_merge.outputs.merge == 'true'
       run: |
-        echo "Running actions for real merge commits..."
+        echo "Running actions for merge commits..."
         # Add your actions here
 
-    - name: Run actions if no real merge commit is detected
+    - name: Run actions if no merge commit is detected
       if: steps.check_merge.outputs.merge == 'false'
       run: |
         echo "Running actions for non-merge commits..."
