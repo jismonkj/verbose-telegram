@@ -16,7 +16,7 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const commitList = await github.rest.repos.compareCommits({
+          const commitList = await github.rest.repos.listCommits({
             owner: context.repo.owner,
             repo: context.repo.repo,
             per_page: 7, // Adjust as needed
